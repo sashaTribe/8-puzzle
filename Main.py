@@ -1,5 +1,5 @@
 import random
-from heapq import heappush, heappop, heapify
+import heapq
 
 
 desired_goal = [[0,1,2],
@@ -84,9 +84,8 @@ class Node:
         return self.board
 class Puzzle:
 
-    
     def __init__(self):
-        self.open = PriorityQueue()
+        self.open = []
         self.close = set()
 
     # approximation heuristic
@@ -104,19 +103,6 @@ class Puzzle:
     def f(self,current_node, goal_node):
         return self.h(current_node[0].get_board(),goal_node) + current_node[0].get_level()
 
-    def is_fval_smaller_open(self,child):
-        for node in self.open:
-            if child.board == node.board:
-                if child.fval < node.fval:
-                    return True
-        return False
-    
-    def is_fval_smaller_close(self,child):
-        for node in self.close:
-            if child.board == node.board:
-                if child.fval < node.fval:
-                    return True
-        return False
 
     def a_star(self):
         game_board = [[None,None,None],
@@ -129,91 +115,45 @@ class Puzzle:
         print(desired_goal)
         
         start_node.fval = self.f(start_node,end_node)
-        self.open.add(start_node, start_node.fval)
+        self.open.append(start_node)
 
         print("The starting board: ")
         for i in start_node.board:
             for j in i:
                 print(j,end=" ")
             print("")
-        current_status = None
-        while True:
+        while open:
             
-            
-            #self.open.sort(key = lambda x:x.fval, reverse=False)
-            current_status = self.open.poll()
-            if current_status[0].board == end_node:
-                print("success!")
-                break
+            current_status = self.open[0]
             print("Current Status: ")
             print("\n")
-            #print(current_status[0])
-            for i in current_status[0].board:
+            for i in current_status.board:
                 for j in i:
                     print(j,end=" ")
                 print("")
-            if self.h(current_status[0].board,end_node) == 0:
+            if self.h(current_status.board,end_node) == 0:
                 break
             #x,y = current_status.find_empty_space()
 
             
-            children = current_status[0].generate_children()
-            #self.open = children
+            children = current_status.generate_children()
             for i in children:
-                if i not in self.close:
-                    self.open.add(i,i.fval)
-                    print(i.board)
-            self.close.add(current_status)
-            
-                            
+                i.fval = self.f(i,end_node)
+                self.open.append(i)
+                print("Child Node: ", i.board)
                 
-                            
+            self.close.add(tuple(map(tuple, current_status.board)))
+            
+            del self.open[0]
 
-            
-'''for j in self.open:
-                    if i.board == j.board and i.fval > j.fval:
-                        continue
-                    else:
-                        self.open.append(i)
-                    i.fval = self.f(i,end_node)
-                    self.open.append(i)
-                    print("Child Node: ", i.board)'''
-                
-            
-            
-            #del self.open[0]
-
-            
+            children.sort(key = lambda x:x.fval, reverse=False)
+            self.open[0] = children[0]
             
             #self.close.append(self.open[0])
             
             
             #print("Length of open array: ", len(self.open))
-        
-class PriorityQueue:
-  pq = []
-  def _init_(self):
-    self.pq = []
-    
-
-  def add(self, item,priority):
-    print("Fval: ", item.fval)
-    heappush(self.pq, (item,priority))
-
-  def poll(self):
-    return heappop(self.pq)
-
-  def peek(self):
-    return self.pq[0]
-
-  def remove(self, item):
-    key_func = lambda item:item.fval
-    value = self.pq.remove(item)
-    heapify(self.pq)
-    return value is not None
-
-  def _len_(self):
-    return len(self.pq)
+        print("Success!")
 
 puzzle = Puzzle()
 puzzle.a_star()
