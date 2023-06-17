@@ -23,6 +23,9 @@ class Node:
         self.board = board
         self.level = level
         self.fval = fval
+    
+    def __lt__(self, other):
+        return self.fval < other.fval
 
 
     def create_child(self,board,x1,y1, x2,y2):
@@ -70,8 +73,15 @@ class Node:
                 t.append(j)
             temp.append(t)
         return temp  
+    
+    def get_level(self):
+        return self.level
+    
+    def get_fval(self):
+        return self.fval
             
-
+    def get_board(self):
+        return self.board
 class Puzzle:
 
     
@@ -92,7 +102,7 @@ class Puzzle:
 
     # function to calculate f(x) = g(x) + h(x)
     def f(self,current_node, goal_node):
-        return self.h(current_node.board,goal_node) + current_node.level
+        return self.h(current_node[0].get_board(),goal_node) + current_node[0].get_level()
 
     def is_fval_smaller_open(self,child):
         for node in self.open:
@@ -119,7 +129,7 @@ class Puzzle:
         print(desired_goal)
         
         start_node.fval = self.f(start_node,end_node)
-        self.open.add(start_node)
+        self.open.add(start_node, start_node.fval)
 
         print("The starting board: ")
         for i in start_node.board:
@@ -132,26 +142,26 @@ class Puzzle:
             
             #self.open.sort(key = lambda x:x.fval, reverse=False)
             current_status = self.open.poll()
-            if current_status[1] == end_node:
+            if current_status[0].board == end_node:
                 print("success!")
                 break
             print("Current Status: ")
             print("\n")
-            #print(current_status[1])
-            for i in current_status[1].board:
+            #print(current_status[0])
+            for i in current_status[0].board:
                 for j in i:
                     print(j,end=" ")
                 print("")
-            if self.h(current_status[1].board,end_node) == 0:
+            if self.h(current_status[0].board,end_node) == 0:
                 break
             #x,y = current_status.find_empty_space()
 
             
-            children = current_status[1].generate_children()
+            children = current_status[0].generate_children()
             #self.open = children
             for i in children:
                 if i not in self.close:
-                    self.open.add(i)
+                    self.open.add(i,i.fval)
                     print(i.board)
             self.close.add(current_status)
             
@@ -186,9 +196,9 @@ class PriorityQueue:
     self.pq = []
     
 
-  def add(self, item):
+  def add(self, item,priority):
     print("Fval: ", item.fval)
-    heappush(self.pq, (item.fval,item))
+    heappush(self.pq, (item,priority))
 
   def poll(self):
     return heappop(self.pq)
